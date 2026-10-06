@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TEAM 84FF Dashboard</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121b2d;
+      --panel-2: #18243d;
+      --accent: #4ade80;
+      --text: #e7edf8;
+      --muted: #a7b4c9;
+      --danger: #f87171;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0b1020, #111827);
+      color: var(--text);
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .title {
+      font-size: 2rem;
+      font-weight: bold;
+      letter-spacing: 0.03em;
+    }
+    .status-badge {
+      background: rgba(74, 222, 128, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(74, 222, 128, 0.4);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 0.9rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    .stat-label {
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+    }
+    .panel {
+      background: var(--panel);
+      border-radius: 16px;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    thead th {
+      text-align: left;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    tbody td {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: var(--text);
+    }
+    .logs {
+      max-height: 280px;
+      overflow: auto;
+      padding: 8px 0 0;
+      font-family: monospace;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .logs div {
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    @media (max-width: 700px) {
+      .title { font-size: 1.4rem; }
+      .stat-value { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="title">TEAM 84FF - FreeFire Dashboard</div>
+      <div class="status-badge" id="statusBadge">Running</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="stat-label">Total Accounts</div>
+        <div class="stat-value" id="totalAccounts">0</div>
+      </div>
+      <div class="card">
+        <div class="stat-label">Active Regions</div>
+        <div class="stat-value" id="activeRegions">0</div>
+      </div>
+      <div class="card">
+        <div class="stat-label">EXP Farmed</div>
+        <div class="stat-value" id="expFarmed">0</div>
+      </div>
+      <div class="card">
+        <div class="stat-label">Match Cycles</div>
+        <div class="stat-value" id="matchCycles">0</div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px;">
+      <h3 style="margin:0 0 12px;">Accounts</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>UID</th>
+            <th>Region</th>
+            <th>Level</th>
+            <th>EXP</th>
+            <th>Matches</th>
+            <th>Device</th>
+          </tr>
+        </thead>
+        <tbody id="accountTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin:0 0 12px;">Live Log</h3>
+      <div class="logs" id="liveLogs"></div>
+    </div>
+  </div>
+
+  <script>
+    async function loadJson(url) {
+      const response = await fetch(url);
+      return response.json();
+    }
+
+    function renderAccounts(data) {
+      const tableBody = document.getElementById('accountTableBody');
+      tableBody.innerHTML = '';
+
+      data.accounts.forEach((account) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${account.uid}</td>
+          <td>${account.region}</td>
+          <td>${account.level}</td>
+          <td>${account.exp}</td>
+          <td>${account.matches_played}</td>
+          <td>${account.device_id}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function renderLogs(data) {
+      const liveLogs = document.getElementById('liveLogs');
+      liveLogs.innerHTML = (data.logs || []).map((line) => `<div>${line}</div>`).join('');
+    }
+
+    async function refresh() {
+      const accounts = await loadJson('/api/accounts');
+      const logs = await loadJson('/api/logs');
+      const status = await loadJson('/api/status');
+
+      document.getElementById('totalAccounts').textContent = accounts.accounts.length;
+      document.getElementById('activeRegions').textContent = new Set(accounts.accounts.map(a => a.region)).size;
+      document.getElementById('expFarmed').textContent = accounts.accounts.reduce((sum, a) => sum + a.exp_gain, 0);
+      document.getElementById('matchCycles').textContent = accounts.accounts.reduce((sum, a) => sum + a.matches_played, 0);
+      document.getElementById('statusBadge').textContent = status.status === 'running' ? 'Running' : 'Stopped';
+
+      renderAccounts(accounts);
+      renderLogs(logs);
+    }
+
+    setInterval(refresh, 4000);
+    refresh();
+  </script>
+</body>
+</html>

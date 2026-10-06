@@ -1,0 +1,14 @@
+{
+  "sample_uid_001": {
+    "device_id": "device-001",
+    "device_name": "Pixel-7",
+    "region": "BD",
+    "last_seen": "2026-01-01T00:00:00Z"
+  },
+  "sample_uid_002": {
+    "device_id": "device-002",
+    "device_name": "Galaxy-A54",
+    "region": "IND",
+    "last_seen": "2026-01-01T00:00:00Z"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "sample_uid_001": {
+    "access_token": "placeholder_access_token_001",
+    "refresh_token": "placeholder_refresh_token_001",
+    "expires_at": "2026-12-31T23:59:59Z"
+  },
+  "sample_uid_002": {
+    "access_token": "placeholder_access_token_002",
+    "refresh_token": "placeholder_refresh_token_002",
+    "expires_at": "2026-12-31T23:59:59Z"
+  }
+}

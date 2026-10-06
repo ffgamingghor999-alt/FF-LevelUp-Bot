@@ -1,0 +1,64 @@
+import json
+from pathlib import Path
+
+from aiohttp import web
+
+
+ROOT = Path(__file__).resolve().parent
+TEMPLATE_DIR = ROOT / "templates"
+
+
+def load_json(path: Path, default):
+    if not path.exists():
+        path.write_text(json.dumps(default, indent=2), encoding="utf-8")
+        return default
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return default
+
+
+def create_app(state):
+    app = web.Application()
+
+    async def index(request):
+        html = (TEMPLATE_DIR / "index.html").read_text(encoding="utf-8")
+        return web.Response(text=html, content_type="text/html")
+
+    async def api_accounts(request):
+        accounts = load_json(ROOT / "accounts.json", [])
+        devices = load_json(ROOT / "devices.json", {})
+        payload = []
+        for item in accounts:
+            uid = str(item.get("uid", "unknown"))
+            device = devices.get(uid, {"device_id": "n/a", "region": "N/A"})
+            payload.append(
+                {
+                    "uid": uid,
+                    "level": 8 + (len(uid) % 11),
+                    "exp": 2100 + (len(uid) * 25),
+                    "matches_played": 0,
+                    "exp_gain": 0,
+                    "region": device.get("region", "N/A"),
+                    "device_id": device.get("device_id", "n/a"),
+                }
+            )
+        return web.json_response({"accounts": payload})
+
+    async def api_logs(request):
+        logs = state.get("logs", [])
+        return web.json_response({"logs": logs[-25:]})
+
+    async def api_status(request):
+        return web.json_response({
+            "status": "running",
+            "tick": state.get("tick", 0),
+            "accounts_total": len(load_json(ROOT / "accounts.json", [])),
+        })
+
+    app.router.add_get("/", index)
+    app.router.add_get("/api/accounts", api_accounts)
+    app.router.add_get("/api/logs", api_logs)
+    app.router.add_get("/api/status", api_status)
+
+    return app
